@@ -1,0 +1,16 @@
+name: Slack Notifications with statuses
+author: Asugawara
+inputs:
+  GITHUB_TOKEN:
+    required: true
+  SLACK_WEBHOOK_URL:
+    required: true
+  MENTION_MAP:
+    required: false
+  STATUS_EMOJI_MAP:
+    required: false
+  NAME:
+    required: false
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
