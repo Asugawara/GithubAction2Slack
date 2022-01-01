@@ -6,9 +6,11 @@ inputs:
     required: true
   SLACK_WEBHOOK_URL:
     required: true
-  MENTION_MAP:
+  MENTION_USERS:
     required: false
-  STATUS_EMOJI_MAP:
+  MENTION_BRANCHES:
+    required: false
+  STATUS_EMOJI:
     required: false
   NAME:
     required: false

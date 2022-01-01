@@ -138,10 +138,10 @@ def main():
 
     if args.mention_branches:
         mention_branches = json.loads(args.mention_branches)
-        m_branched = mention_branches.get(args.branch)
-        if isinstance(m_branched, dict):
-            m_branched = m_branched.get(workflow_status)
-    head_notification = "" if not args.mention_branches else m_branched
+        m_branch = mention_branches.get(args.branch)
+        if isinstance(m_branch, dict):
+            m_branch = m_branch.get(workflow_status)
+    head_notification = "" if not args.mention_branches else m_branch
 
     workflow_duration = calc_duration(workflow.body["created_at"], workflow.body["updated_at"])
     main_text = f"{head_notification}[{args.branch.replace('/', '_')}] "
