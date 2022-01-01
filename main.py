@@ -110,8 +110,9 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--token", default=os.getenv("INPUT_GITHUB_TOKEN"))
     parser.add_argument("--webhook-url", default=os.getenv("INPUT_SLACK_WEBHOOK_URL"))
-    parser.add_argument("--mention-map", default=os.getenv("INPUT_MENTION_MAP"))
-    parser.add_argument("--status-emoji-map", default=os.getenv("INPUT_STATUS_EMOJI_MAP"))
+    parser.add_argument("--mention-actors", default=os.getenv("INPUT_MENTION_ACTORS"))
+    parser.add_argument("--mention-branches", default=os.getenv("INPUT_MENTION_BRANCHES"))
+    parser.add_argument("--status-emoji", default=os.getenv("INPUT_STATUS_EMOJI"))
     parser.add_argument("--name", default=os.getenv("INPUT_NAME", "Bot"))
     parser.add_argument("--base-url", default=os.getenv("GITHUB_API_URL"))
     parser.add_argument("--run-id", default=os.getenv("GITHUB_RUN_ID"))
@@ -128,16 +129,19 @@ def main():
     fields = SlackAttachmentFields(jobs)
     workflow_status = fields.workflow_status.name
 
-    actor = args.actor
-    head_notification = ""
-    if args.mention_map:
-        args.mention_map = json.loads(args.mention_map)
-        actor = args.mention_map.get(args.actor, args.actor)
-        if isinstance(actor, dict):
-            actor = actor.get(workflow_status, args.actor)
-        head_notification = args.mention_map.get(args.branch, "")
-        if isinstance(head_notification, dict):
-            head_notification = head_notification.get(workflow_status, "")
+    if args.mention_actors:
+        mention_actors = json.loads(args.mention_actors)
+        m_actor = mention_actors.get(args.actor)
+        if isinstance(m_actor, dict):
+            m_actor = m_actor.get(workflow_status)
+    actor = args.actor if not args.mention_actors else m_actor
+
+    if args.mention_branches:
+        mention_branches = json.loads(args.mention_branches)
+        m_branched = mention_branches.get(args.branch)
+        if isinstance(m_branched, dict):
+            m_branched = m_branched.get(workflow_status)
+    head_notification = "" if not args.mention_branches else m_branched
 
     workflow_duration = calc_duration(workflow.body["created_at"], workflow.body["updated_at"])
     main_text = f"{head_notification}[{args.branch.replace('/', '_')}] "
@@ -147,9 +151,8 @@ def main():
     sub_text = f"Workflow: {args.workflow_name} "
     sub_text += f"<{workflow.body['html_url']}|#{workflow.body['run_number']}>"
     icon_emoji = ":github_actions:"
-    if args.status_emoji_map:
-        args.status_emoji_map = json.loads(args.status_emoji_map)
-        icon_emoji = args.status_emoji_map[workflow_status]
+    if args.status_emoji:
+        icon_emoji = json.loads(args.status_emoji)[workflow_status]
 
     notify = SlackNotifier(args.webhook_url)
     notify.build_payload(args.name, icon_emoji, main_text, sub_text, fields)

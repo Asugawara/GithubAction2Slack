@@ -1,5 +1,6 @@
 name: Slack Notifications with statuses
 author: Asugawara
+description: GithubAction2Slack is Action to post GithubActions Workflow status into Slack channel via webhook URL on Python3.
 inputs:
   GITHUB_TOKEN:
     required: true
