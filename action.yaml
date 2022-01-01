@@ -6,7 +6,7 @@ inputs:
     required: true
   SLACK_WEBHOOK_URL:
     required: true
-  MENTION_USERS:
+  MENTION_ACTORS:
     required: false
   MENTION_BRANCHES:
     required: false
