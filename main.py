@@ -5,6 +5,7 @@ import re
 import urllib.request
 from datetime import datetime, timedelta
 from enum import Enum
+from typing import List, Pattern
 
 
 class GithubResponse:
@@ -13,7 +14,7 @@ class GithubResponse:
 
 
 class GithubClient:
-    GITHUB_APP = "application/vnd.github.v3+json"
+    GITHUB_APP: str = "application/vnd.github.v3+json"
     header: dict
     base_url: str
 
@@ -35,7 +36,7 @@ class GithubClient:
         return self.get_response(jobs_url)
 
 
-DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
+DATETIME_FORMAT: str = "%Y-%m-%dT%H:%M:%SZ"
 
 
 def calc_duration(started_at: str, completed_at: str) -> timedelta:
@@ -50,12 +51,9 @@ class WorkflowStatus(Enum):
 
 
 class SlackAttachmentFields:
-    data: list[dict]
-    workflow_status: WorkflowStatus
-
     def __init__(self, jobs: GithubResponse) -> None:
-        self.data = []
-        self.workflow_status = WorkflowStatus.SUCCESS
+        self.data: List[dict] = []
+        self.workflow_status: WorkflowStatus = WorkflowStatus.SUCCESS
         for job in jobs.body["jobs"]:
             job_field = {}
             job_field["title"] = f'{job["conclusion"]}: {job["name"]}'
@@ -69,21 +67,19 @@ class SlackAttachmentFields:
 
 
 class SlackNotifier:
-    __web_hook_url: str
-    payload: dict
-    attachments: dict
-    HEADER = {"Content-type": "application/json"}
+    HEADER: dict = {"Content-type": "application/json"}
 
     def __init__(self, web_hook_url: str) -> None:
-        self.__web_hook_url = web_hook_url
-        self.payload = {}
-        self.attachments = {}
+        self.__web_hook_url: str = web_hook_url
+        self.payload: dict = {}
 
-    def build_attachments(self, sub_text: str, fields: SlackAttachmentFields) -> None:
-        self.attachments["mrkdwn_in"] = ["text"]
-        self.attachments["color"] = "good" if fields.workflow_status.value else "danger"
-        self.attachments["text"] = sub_text
-        self.attachments["fields"] = fields.data
+    def build_attachments(self, sub_text: str, fields: SlackAttachmentFields) -> dict:
+        attachments: dict = {}
+        attachments["mrkdwn_in"] = ["text"]
+        attachments["color"] = "good" if fields.workflow_status.value else "danger"
+        attachments["text"] = sub_text
+        attachments["fields"] = fields.data
+        return attachments
 
     def build_payload(
         self, user_name: str, icon_emoji: str, main_text: str, sub_text: str, fields: SlackAttachmentFields
@@ -91,8 +87,7 @@ class SlackNotifier:
         self.payload["username"] = user_name
         self.payload["text"] = main_text
         self.payload["icon_emoji"] = icon_emoji
-        self.build_attachments(sub_text, fields)
-        self.payload["attachments"] = [self.attachments]
+        self.payload["attachments"] = [self.build_attachments(sub_text, fields)]
 
     def post_notification(self, verbose: bool = False) -> None:
         req = urllib.request.Request(
@@ -103,7 +98,7 @@ class SlackNotifier:
                 print(res.read())
 
 
-RE_BRANCH = re.compile(r".*heads/")
+RE_BRANCH: Pattern[str] = re.compile(r".*heads/")
 
 
 def main():
